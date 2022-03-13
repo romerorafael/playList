@@ -1,13 +1,15 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <string>
-using namespace std;
+
+using namespace std; 
 
 struct Song{
 	string name;
 	string artist;
-	int duration;
+	string duration;
 	struct Song *next;
 	struct Song *prev;
 } *Head, *End;
@@ -15,15 +17,17 @@ struct Song{
 int Menu();
 void InsertSong(Song *newSong);
 void ShowList();
+void chargeSongs();
+void persistList(Song *newSong);
 
 int main(){
 	struct Song *newSong;
-	string _name, _artist;
+	string _name, _artist, _duration;
 	int option;
 
 	Head = NULL;
 	End = NULL;
-	// chargePlayList();
+	chargeSongs();
 
 	while (1)
 	{
@@ -44,9 +48,13 @@ int main(){
 				newSong->artist = _artist;
 
 				cout << "Qual a duracao da musica (segundos): ";
-				cin >> newSong->duration;
+				getline(cin>>ws, _duration);
+				newSong->duration = _duration;
 
 				InsertSong(newSong);
+
+				persistList(newSong);
+
 				break;
 			case 2:
 				ShowList();
@@ -88,11 +96,10 @@ void InsertSong(Song *newSong){
 		Head->prev = newSong;
 		Head = newSong;
 	}
-
 }
 
 void ShowList(){
-	
+
 	if(Head == NULL){
 		cout << "Não existe nenhum elemento na lista" << endl;
 	}else{
@@ -108,4 +115,64 @@ void ShowList(){
 	}
 
 	system("pause");
+}
+
+void chargeSongs(){
+	struct Song *actual;
+	string linha, auxWord="", auxList[3] = {"","",""};
+	ifstream lista("list.txt");
+	int k;
+
+	if(!lista.is_open())
+		cout << "Erro na leitura do arquivo";
+
+	while (getline(lista,linha))
+	{
+		k=0;
+		for(unsigned int i=0; i <= linha.length() ; i++){
+			if(linha[i] != ','){
+				if(linha[i]=='\0'){
+					auxList[k] = auxWord;
+					k++;
+					auxWord="";
+				}else{
+					auxWord += linha[i];
+				}
+			}else{
+				auxList[k] = auxWord;
+				k++;
+				auxWord="";
+			}
+		}
+
+		actual = (Song*) calloc(1, sizeof(Song));
+		
+		cout<<auxList[0]<<endl;
+		cout<<auxList[1]<<endl;
+		cout<<auxList[2]<<endl;
+		actual->name = auxList[0];
+		actual->artist = auxList[1];
+		actual->duration = auxList[2];
+
+		system("pause");
+
+		InsertSong(actual);
+
+		auxList[0] ="";
+		auxList[1] ="";
+		auxList[2] ="";
+	}
+	lista.close();
+}
+
+void persistList(Song *newSong){
+	ofstream out("list.txt", ios::app);
+	string writeLine = "";
+	if(newSong != NULL){
+		writeLine = newSong->name + "," + newSong->artist + "," + newSong->duration + '\n';
+		out << writeLine << endl;
+		out.close();
+	}else{
+		cout<< "Erro ao salvar";
+	}
 }
